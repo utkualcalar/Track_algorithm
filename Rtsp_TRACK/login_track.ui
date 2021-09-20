@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Login</string>
   </property>
   <widget class="QPushButton" name="btn_play">
    <property name="geometry">
@@ -161,5 +161,22 @@
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btn_play</sender>
+   <signal>clicked()</signal>
+   <receiver>Login</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>160</x>
+     <y>455</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>332</x>
+     <y>262</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

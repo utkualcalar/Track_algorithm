@@ -20,7 +20,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void paintEvent(QPaintEvent *);
-    QPoint point, point_start, point_end, point_move, temp, temp_2;
+    QPoint point, point_start, point_end, point_move, temporary_point, temporary_point2, rect_1, rect_2;
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

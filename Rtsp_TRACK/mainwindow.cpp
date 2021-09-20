@@ -9,12 +9,6 @@
 #include <opencv2/opencv.hpp>
 #include <QWidget>
 #include <iostream>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include <opencv2/tracking.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/videoio.hpp>
 #include <QElapsedTimer>
 #include <QDebug>
 #include <QMouseEvent>
@@ -39,7 +33,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     Login l;
-    l.exec();
+
+    if(l.exec() != QDialog::Accepted)
+    {
+        exit(0);
+    }
+
     decoder = new FFmpegDecoder(l.getRtspURL().toStdString());
     decoder->connect();
     mode = l.getMode().toInt();
@@ -179,8 +178,8 @@ void MainWindow::paintEvent(QPaintEvent *)
 
 void MainWindow::drawRect()
 {
-    trackingBox = cv::Rect2d(point_start.x()*(1920/width_of_screen), point_start.y()*(1080/height_of_screen),
-                             abs(point_move.x()-point_start.x())*(1920/width_of_screen), abs(point_move.y()-point_start.y())*(1080/height_of_screen));
+    trackingBox = cv::Rect2d(rect_1.x()*(1920/width_of_screen), rect_1.y()*(1080/height_of_screen),
+                             abs(rect_2.x()-rect_1.x())*(1920/width_of_screen), abs(rect_2.y()-rect_1.y())*(1080/height_of_screen));
     cv::rectangle(src, trackingBox, cv::Scalar(255, 0, 255), 3);
 }
 
@@ -211,6 +210,35 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     point = event->pos();
     point_move = point;
     draw_rect = true;
+
+    if(point_start.x() < point_move.x() && point_start.y() < point_move.y())
+    {
+        rect_1 = point_start;
+        rect_2 = point_move;
+    }
+    if(point_start.x() > point_move.x() && point_start.y() < point_move.y())
+    {
+        int temporary = point_start.x();
+        int temporary_2 = point_move.x();
+        QPoint rect_1_temporary (temporary_2, point_start.y());
+        QPoint rect_2_temporary (temporary, point_move.y());
+        rect_1 = rect_1_temporary;
+        rect_2 = rect_2_temporary;
+    }
+    if(point_start.x() < point_move.x() && point_start.y() > point_move.y())
+    {
+        int temporary = point_start.y();
+        int temporary_2 = point_move.y();
+        QPoint rect_1_temporary (point_start.x(), temporary_2);
+        QPoint rect_2_temporary (point_move.x(), temporary);
+        rect_1 = rect_1_temporary;
+        rect_2 = rect_2_temporary;
+    }
+    if(point_start.x() > point_move.x() && point_start.y() > point_move.y())
+    {
+        rect_1 = point_move;
+        rect_2 = point_start;
+    }
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
@@ -218,12 +246,33 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
     draw_rect = false;
     point = event->pos();
     point_end = point;
-    if(point_start.x() > point_end.x() && point_start.y() > point_end.y()){
-        temp = point_start;
-        temp_2 = point_end;
-        point_start  = temp_2;
-        point_end = temp;
+
+    if(point_start.x() > point_end.x() && point_start.y() > point_end.y())
+    {
+        temporary_point = point_start;
+        temporary_point2 = point_end;
+        point_start  = temporary_point2;
+        point_end = temporary_point;
     }
+    if(point_start.x() > point_end.x() && point_start.y() < point_end.y())
+    {
+        int temporary = point_start.x();
+        int temporary_2 = point_end.x();
+        QPoint point_start_temporary (temporary_2, point_start.y());
+        QPoint point_end_temporary (temporary, point_end.y());
+        point_start = point_start_temporary;
+        point_end = point_end_temporary;
+    }
+    if(point_start.x() < point_end.x() && point_start.y() > point_end.y())
+    {
+        int temporary = point_start.y();
+        int temporary_2 = point_end.y();
+        QPoint point_start_temporary (point_start.x(), temporary_2);
+        QPoint point_end_temporary (point_end.x(), temporary);
+        point_start = point_start_temporary;
+        point_end = point_end_temporary;
+    }
+
     counter_2 = 0;
     counter = 0;
     is_trackingbox_selected = true;
@@ -282,7 +331,11 @@ void MainWindow::on_Exit_Tracking_clicked()
 {
     counter_2 = 0;
     is_trackingbox_selected = false;
-    tracker -> clear();
+    if (tracker != NULL)
+    {
+        tracker -> clear();
+        tracker = NULL;
+    }
 }
 
 void MainWindow::button_color()
